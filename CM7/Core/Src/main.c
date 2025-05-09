@@ -180,7 +180,7 @@ Error_Handler();
     uint8_t ch[12] ={0};
     ch[0] = 1;
     ch[1] = 0;
-    ch[2] = 1;
+    ch[2] = 0;
     ch[3] = 0;
     sv_single_con(ch);
 
