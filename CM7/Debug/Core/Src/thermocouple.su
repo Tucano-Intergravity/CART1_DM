@@ -1,0 +1,5 @@
+../Core/Src/thermocouple.c:14:6:MAX31855_CS_Enable	16	static
+../Core/Src/thermocouple.c:191:6:MAX31855_CS_Disable	16	static
+../Core/Src/thermocouple.c:368:10:MAX31855_ReadData	24	static
+../Core/Src/thermocouple.c:387:7:MAX31855_GetThermocoupleTemperature	24	static
+../Core/Src/thermocouple.c:426:6:MAX31855_CheckFault	24	static
