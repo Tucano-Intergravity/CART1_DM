@@ -23,6 +23,7 @@
 /* USER CODE BEGIN Includes */
 #include <stdbool.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "solenoidvalve.h"
 #include "thermocouple.h"
@@ -208,6 +209,7 @@ Error_Handler();
   MX_ADC1_Init();
   MX_UART4_Init();
   /* USER CODE BEGIN 2 */
+  uint8_t sv[MAX_SV_NUM] = {0};
 
   HAL_TIM_Base_Start_IT(&htim2);
 
@@ -253,24 +255,47 @@ Error_Handler();
 	  if (fTC == true)
 	  {
 		  fTC = false;
-	  }
+
+		  uint8_t TC[MAX_TC_SIZE];
+		  GetTC(TC);
+
+		  uint8_t sv_cnt = 0;
+		  char* tok;
+		  tok = strtok((char*)TC,",");
+		  if (strcmp(tok,"IGRVT") == 0)
+		  {
+			  tok = strtok(NULL,",");
+			  while( tok != NULL)
+			  {
+				  uint8_t data = (uint8_t)atoi(tok);
+				  if (isfinite((float)data) == 1)
+				  {
+					  if (data == 999)
+					  {
+						  sv_cnt = 0;
+						  break;
+					  }
+					  else if (data <= 1)
+					  {
+						  sv[sv_cnt] = atoi(tok);
+					  }
+				  }
+				  sv_cnt++;
+				  if (sv_cnt > MAX_SV_NUM)
+				  {
+					  break;
+				  }
+
+				  tok = strtok(NULL,",");
+			  }
+		  }
+	  } // if (fTC == true)
 
 	  if (f10ms == true)
 	  {
 		  f10ms = false;
 
-		  uint8_t ch[MAX_SV_NUM] ={0};
-		  ch[0] = 0;
-		  ch[1] = 1;
-		  ch[2] = 0;
-		  ch[3] = 1;
-		  ch[4] = 0;
-		  ch[5] = 1;
-		  ch[6] = 0;
-		  ch[7] = 1;
-		  ch[8] = 0;
-		  ch[9] = 1;
-		  SVUpdate(ch);
+		  SVUpdate(sv);
 
 		  GetTemp(TC);
 
