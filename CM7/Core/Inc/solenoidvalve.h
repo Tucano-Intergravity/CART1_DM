@@ -54,6 +54,6 @@
 #define SV_CH10_PORT	GPIOC
 #define SV_CH10_GPIO	GPIO_PIN_9
 
-void sv_single_con(uint8_t* ch);
+void SVUpdate(uint8_t* ch);
 
 #endif /* INC_SOLENOIDVALVE_H_ */

@@ -8,7 +8,7 @@
 #include "solenoidvalve.h"
 #include <stdint.h>
 
-void sv_single_con(uint8_t* ch)
+void SVUpdate(uint8_t* ch)
 {
 	for (uint8_t i = 0; i<MAX_SV_NUM; i++) {
 		switch(i) {

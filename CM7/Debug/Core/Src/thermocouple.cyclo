@@ -3,3 +3,4 @@
 ../Core/Src/thermocouple.c:368:10:MAX31855_ReadData	1
 ../Core/Src/thermocouple.c:387:7:MAX31855_GetThermocoupleTemperature	2
 ../Core/Src/thermocouple.c:426:6:MAX31855_CheckFault	5
+../Core/Src/thermocouple.c:445:6:GetTemp	2

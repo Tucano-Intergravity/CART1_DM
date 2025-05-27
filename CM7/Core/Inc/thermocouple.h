@@ -45,7 +45,7 @@
 #define U12_CS_PIN	GPIO_PIN_14
 
 
-#define MAX_TC_CH	20
+#define MAX_TC_CH	12
 
 #define TC_CH1	0
 #define TC_CH2 	1
@@ -84,6 +84,8 @@ uint32_t MAX31855_ReadData(uint8_t ch);
 
 // 열전대(Hot Junction) 온도 변환 함수
 float MAX31855_GetThermocoupleTemperature(uint8_t ch);
+
+void GetTemp(double*);
 
 // 내부(Cold Junction) 온도 변환 함수
 //float MAX31855_GetInternalTemperature(void);

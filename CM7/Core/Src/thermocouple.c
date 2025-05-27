@@ -441,3 +441,12 @@ void MAX31855_CheckFault(uint8_t ch)
 	}
 }
 
+
+void GetTemp(double* Temp)
+{
+	for (uint8_t i=0; i < MAX_TC_CH; i++)
+	{
+		Temp[i] = (double)MAX31855_GetThermocoupleTemperature(i);
+	}
+}
+

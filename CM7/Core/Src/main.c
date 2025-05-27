@@ -21,10 +21,13 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <stdbool.h>
+#include <string.h>
+
 #include "solenoidvalve.h"
 #include "thermocouple.h"
 #include "pressure.h"
-#include <stdbool.h>
+#include "tmtc.h"
 
 /* USER CODE END Includes */
 
@@ -58,6 +61,8 @@ SPI_HandleTypeDef hspi1;
 
 TIM_HandleTypeDef htim2;
 
+UART_HandleTypeDef huart4;
+
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -69,6 +74,7 @@ static void MX_DMA_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_ADC1_Init(void);
+static void MX_UART4_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -82,7 +88,7 @@ uint8_t f1000ms = false;
 
 uint32_t cnt1ms = 0;
 
-float TC[20];
+double TC[MAX_TC_CH];
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
@@ -110,6 +116,29 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 }
 
 uint16_t ADC_results[N_ADC_CH];
+
+
+//#define RX_BUFFER_SIZE 64
+//uint8_t rx_data;
+//uint8_t rx_buffer[RX_BUFFER_SIZE];
+//uint8_t rx_index = 0;
+//
+//void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+//{
+//    if (huart->Instance == UART4)
+//    {
+//        rx_buffer[rx_index++] = rx_data;
+//
+//        // 순환 버퍼 또는 수신 종료 문자 조건으로 처리 가능
+//        if (rx_index >= RX_BUFFER_SIZE)
+//        {
+//            rx_index = 0; // 오버플로 방지
+//        }
+//
+//        // 다음 수신 재시작
+//        HAL_UART_Receive_IT(&huart4, &rx_data, 1);
+//    }
+//}
 
 
 
@@ -177,11 +206,15 @@ Error_Handler();
   MX_SPI1_Init();
   MX_TIM2_Init();
   MX_ADC1_Init();
+  MX_UART4_Init();
   /* USER CODE BEGIN 2 */
 
   HAL_TIM_Base_Start_IT(&htim2);
 
   InitPT();
+  InitTMTC();
+
+
 
   /* USER CODE END 2 */
 
@@ -217,18 +250,10 @@ Error_Handler();
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
-	  /* -- Sample board code for User push-button in interrupt mode ---- */
-//	  if (BspButtonState == BUTTON_PRESSED)
-//	  {
-//		  /* Update button state */
-//		  BspButtonState = BUTTON_RELEASED;
-//		  /* -- Sample board code to toggle leds ---- */
-//		  BSP_LED_Toggle(LED_GREEN);
-//		  BSP_LED_Toggle(LED_YELLOW);
-//		  BSP_LED_Toggle(LED_RED);
-//		  /* ..... Perform your action ..... */
-//	  }
+	  if (fTC == true)
+	  {
+		  fTC = false;
+	  }
 
 	  if (f10ms == true)
 	  {
@@ -245,36 +270,25 @@ Error_Handler();
 		  ch[7] = 1;
 		  ch[8] = 0;
 		  ch[9] = 1;
-		  sv_single_con(ch);
+		  SVUpdate(ch);
 
-		  TC[TC_CH1] = MAX31855_GetThermocoupleTemperature(TC_CH1);
-		  TC[TC_CH2] = MAX31855_GetThermocoupleTemperature(TC_CH2);
-		  TC[TC_CH3] = MAX31855_GetThermocoupleTemperature(TC_CH3);
-		  TC[TC_CH4] = MAX31855_GetThermocoupleTemperature(TC_CH4);
-		  TC[TC_CH5] = MAX31855_GetThermocoupleTemperature(TC_CH5);
-		  TC[TC_CH6] = MAX31855_GetThermocoupleTemperature(TC_CH6);
-		  TC[TC_CH7] = MAX31855_GetThermocoupleTemperature(TC_CH7);
-		  TC[TC_CH8] = MAX31855_GetThermocoupleTemperature(TC_CH8);
-		  TC[TC_CH9] = MAX31855_GetThermocoupleTemperature(TC_CH9);
-		  TC[TC_CH10] = MAX31855_GetThermocoupleTemperature(TC_CH10);
-		  TC[TC_CH11] = MAX31855_GetThermocoupleTemperature(TC_CH11);
-		  TC[TC_CH12] = MAX31855_GetThermocoupleTemperature(TC_CH12);
-
-		  BSP_LED_Toggle(LED_RED);
+		  GetTemp(TC);
 
 		  GetADCRaw(ADC_results);
-
 	  }
 
+	  if (f1000ms == true)
+	  {
+		  f1000ms = false;
+		  BSP_LED_Toggle(LED_RED);
 
-    // test code for SPI1
-	//uint8_t rxBuffer[4] = {0xff, 0xAA, 0xff, 0xAA}; // 4바이트(32비트) 데이터 버퍼
-	//uint8_t txBuffer[4] = {0xff, 0xAA, 0xff, 0xAA};
-	//HAL_SPI_Transmit(&hspi1, rxBuffer, 4, 100);
+		  char *msg = "UART4 ready\r\n";
+		  SendTM((uint8_t*)msg);
+	  }
 
-    /* USER CODE END WHILE */
+	  /* USER CODE END WHILE */
 
-    /* USER CODE BEGIN 3 */
+	  /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
 }
@@ -328,7 +342,7 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.SYSCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB3CLKDivider = RCC_APB3_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_APB1_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_APB1_DIV2;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV1;
   RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV1;
 
@@ -605,6 +619,54 @@ static void MX_TIM2_Init(void)
   /* USER CODE BEGIN TIM2_Init 2 */
 
   /* USER CODE END TIM2_Init 2 */
+
+}
+
+/**
+  * @brief UART4 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_UART4_Init(void)
+{
+
+  /* USER CODE BEGIN UART4_Init 0 */
+
+  /* USER CODE END UART4_Init 0 */
+
+  /* USER CODE BEGIN UART4_Init 1 */
+
+  /* USER CODE END UART4_Init 1 */
+  huart4.Instance = UART4;
+  huart4.Init.BaudRate = 230400;
+  huart4.Init.WordLength = UART_WORDLENGTH_8B;
+  huart4.Init.StopBits = UART_STOPBITS_1;
+  huart4.Init.Parity = UART_PARITY_NONE;
+  huart4.Init.Mode = UART_MODE_TX_RX;
+  huart4.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart4.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart4.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart4.Init.ClockPrescaler = UART_PRESCALER_DIV1;
+  huart4.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_SetTxFifoThreshold(&huart4, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_SetRxFifoThreshold(&huart4, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_DisableFifoMode(&huart4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN UART4_Init 2 */
+
+  /* USER CODE END UART4_Init 2 */
 
 }
 

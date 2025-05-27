@@ -1,0 +1,4 @@
+../Core/Src/tmtc.c:25:6:HAL_UART_RxCpltCallback	4
+../Core/Src/tmtc.c:50:6:InitTMTC	2
+../Core/Src/tmtc.c:58:6:GetTC	1
+../Core/Src/tmtc.c:63:6:SendTM	1
