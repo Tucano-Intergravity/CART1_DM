@@ -63,7 +63,7 @@ main-build: CART1_DM_CM7.elf secondary-outputs
 
 # Tool invocations
 CART1_DM_CM7.elf CART1_DM_CM7.map: $(OBJS) $(USER_OBJS) C:\STM3INTERGRAVITY\CART1_DM\CM7\STM32H755ZITX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "CART1_DM_CM7.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m7 -T"C:\STM3INTERGRAVITY\CART1_DM\CM7\STM32H755ZITX_FLASH.ld" --specs=nosys.specs -Wl,-Map="CART1_DM_CM7.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv5-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+	arm-none-eabi-gcc -o "CART1_DM_CM7.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m7 -T"C:\STM3INTERGRAVITY\CART1_DM\CM7\STM32H755ZITX_FLASH.ld" --specs=nosys.specs -Wl,-Map="CART1_DM_CM7.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv5-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

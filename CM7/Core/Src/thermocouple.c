@@ -371,7 +371,7 @@ uint32_t MAX31855_ReadData(uint8_t ch)
 	uint32_t rawData = 0;
 
 	MAX31855_CS_Enable(ch); // CS Low → SPI 시작
-	HAL_SPI_Receive(&hspi1, rxBuffer, 4, SPI_TIMEOUT); // 32비트(4바이트) 데이터 수신
+	HAL_SPI_Receive(&hspi1, rxBuffer, 4, HAL_MAX_DELAY); // 32비트(4바이트) 데이터 수신
 	MAX31855_CS_Disable(ch); // CS High → SPI 종료
 
 	// 4바이트 데이터를 32비트 정수로 변환
@@ -379,6 +379,19 @@ uint32_t MAX31855_ReadData(uint8_t ch)
 			((uint32_t)rxBuffer[1] << 16) |
 			((uint32_t)rxBuffer[2] << 8) |
 			((uint32_t)rxBuffer[3]);
+
+	if (rawData & 0x00010000) {
+		printf("Fault detected!\n");
+	}
+	if (rawData & 0x00000004) {
+		printf("SCV Fault: Thermocouple shorted to VCC!\n");
+	}
+	if (rawData & 0x00000002) {
+		printf("SCG Fault: Thermocouple shorted to GND!\n");
+	}
+	if (rawData & 0x00000001) {
+		printf("OC Fault: Thermocouple open circuit!\n");
+	}
 
 	return rawData;
 }

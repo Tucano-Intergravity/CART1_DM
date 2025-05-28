@@ -82,6 +82,9 @@ static void MX_UART4_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+uint32_t systemtick = 0; // ms
+
 uint8_t f1ms = false;
 uint8_t f10ms = false;
 uint8_t f100ms = false;
@@ -89,7 +92,8 @@ uint8_t f1000ms = false;
 
 uint32_t cnt1ms = 0;
 
-double TC[MAX_TC_CH];
+double TC[MAX_TC_CH] = {0};
+uint8_t sv[MAX_SV_NUM] = {0};
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
@@ -98,6 +102,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		// 1ms마다 실행되는 코드
 		f1ms = true;
 		cnt1ms++;
+		systemtick++;
 
 		if (cnt1ms%10 == 0)
 		{
@@ -209,7 +214,7 @@ Error_Handler();
   MX_ADC1_Init();
   MX_UART4_Init();
   /* USER CODE BEGIN 2 */
-  uint8_t sv[MAX_SV_NUM] = {0};
+
 
   HAL_TIM_Base_Start_IT(&htim2);
 
@@ -256,64 +261,71 @@ Error_Handler();
 	  {
 		  fTC = false;
 
-		  uint8_t TC[MAX_TC_SIZE];
-		  GetTC(TC);
+		  SVCmdDecoding(sv);
 
-		  uint8_t sv_cnt = 0;
-		  char* tok;
-		  tok = strtok((char*)TC,",");
-		  if (strcmp(tok,"IGRVT") == 0)
-		  {
-			  tok = strtok(NULL,",");
-			  while( tok != NULL)
-			  {
-				  uint8_t data = (uint8_t)atoi(tok);
-				  if (isfinite((float)data) == 1)
-				  {
-					  if (data == 999)
-					  {
-						  sv_cnt = 0;
-						  break;
-					  }
-					  else if (data <= 1)
-					  {
-						  sv[sv_cnt] = atoi(tok);
-					  }
-				  }
-				  sv_cnt++;
-				  if (sv_cnt > MAX_SV_NUM)
-				  {
-					  break;
-				  }
-
-				  tok = strtok(NULL,",");
-			  }
-		  }
 	  } // if (fTC == true)
 
 	  if (f10ms == true)
 	  {
 		  f10ms = false;
 
+		  uint8_t tx_buf[512]={0};
+		  uint8_t temp_buf[32]={0};
+
 		  SVUpdate(sv);
 
-		  GetTemp(TC);
+		  sprintf((char*)tx_buf,"IGRVT_SV,%lu",systemtick);
+		  for (uint8_t i = 0; i < MAX_SV_NUM; i++)
+		  {
+			  sprintf((char*)temp_buf,",%u",sv[i]);
+			  strcat((char*)tx_buf,(char*)temp_buf);
+		  }
+		  sprintf((char*)temp_buf,"\n\r");
+		  strcat((char*)tx_buf,(char*)temp_buf);
+
+		  SendTM(tx_buf);
+
+		  //GetTemp(TC);
+
+		  sprintf((char*)tx_buf,"IGRVT_TC,%lu",systemtick);
+		  for (uint8_t i = 0; i < MAX_TC_CH; i++)
+		  {
+			  sprintf((char*)temp_buf,",%d",(int)(TC[i]*10.0));
+			  strcat((char*)tx_buf,(char*)temp_buf);
+		  }
+		  sprintf((char*)temp_buf,"\n\r");
+		  strcat((char*)tx_buf,(char*)temp_buf);
+
+		  SendTM(tx_buf);
 
 		  GetADCRaw(ADC_results);
-	  }
+
+		  sprintf((char*)tx_buf,"IGRVT_PT,%lu",systemtick);
+		  for (uint8_t i = 0; i < MAX_TC_CH; i++)
+		  {
+			  sprintf((char*)temp_buf,",%u",ADC_results[i]);
+			  strcat((char*)tx_buf,(char*)temp_buf);
+		  }
+		  sprintf((char*)temp_buf,"\n\r");
+		  strcat((char*)tx_buf,(char*)temp_buf);
+
+		  SendTM(tx_buf);
+
+		  BSP_LED_Toggle(LED_YELLOW);
+	  } //if (f10ms == true)
 
 	  if (f1000ms == true)
 	  {
-		  f1000ms = false;
+		  f1000ms = false;//
 		  BSP_LED_Toggle(LED_RED);
 
-		  char *msg = "UART4 ready\r\n";
-		  SendTM((uint8_t*)msg);
-	  }
+//		  char *msg = "UART4 ready\r\n";
+//		  SendTM((uint8_t*)msg);
+	  } // if (f1000ms == true)
 
-	  /* USER CODE END WHILE */
+    /* USER CODE END WHILE */
 
-	  /* USER CODE BEGIN 3 */
+    /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
 }
@@ -572,12 +584,12 @@ static void MX_SPI1_Init(void)
   /* SPI1 parameter configuration*/
   hspi1.Instance = SPI1;
   hspi1.Init.Mode = SPI_MODE_MASTER;
-  hspi1.Init.Direction = SPI_DIRECTION_2LINES_RXONLY;
+  hspi1.Init.Direction = SPI_DIRECTION_2LINES;
   hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_64;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -663,7 +675,7 @@ static void MX_UART4_Init(void)
 
   /* USER CODE END UART4_Init 1 */
   huart4.Instance = UART4;
-  huart4.Init.BaudRate = 230400;
+  huart4.Init.BaudRate = 921600;
   huart4.Init.WordLength = UART_WORDLENGTH_8B;
   huart4.Init.StopBits = UART_STOPBITS_1;
   huart4.Init.Parity = UART_PARITY_NONE;
@@ -685,7 +697,7 @@ static void MX_UART4_Init(void)
   {
     Error_Handler();
   }
-  if (HAL_UARTEx_DisableFifoMode(&huart4) != HAL_OK)
+  if (HAL_UARTEx_EnableFifoMode(&huart4) != HAL_OK)
   {
     Error_Handler();
   }
@@ -730,6 +742,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOG_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOE, GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5

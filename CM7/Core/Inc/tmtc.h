@@ -17,5 +17,6 @@ extern uint8_t fTC;
 void InitTMTC(void);
 void GetTC(uint8_t*);
 void SendTM(uint8_t*);
+void SVCmdDecoding(uint8_t*);
 
 #endif /* INC_TMTC_H_ */
