@@ -1,6 +1,9 @@
-../Core/Src/thermocouple.c:14:6:MAX31855_CS_Enable	16	static
-../Core/Src/thermocouple.c:191:6:MAX31855_CS_Disable	16	static
-../Core/Src/thermocouple.c:368:10:MAX31855_ReadData	24	static
-../Core/Src/thermocouple.c:400:7:MAX31855_GetThermocoupleTemperature	24	static
-../Core/Src/thermocouple.c:439:6:MAX31855_CheckFault	24	static
-../Core/Src/thermocouple.c:458:6:GetTemp	24	static
+../Core/Src/thermocouple.c:16:6:MAX31855_CS_Enable	16	static
+../Core/Src/thermocouple.c:193:6:MAX31855_CS_Disable	16	static
+../Core/Src/thermocouple.c:370:10:MAX31855_ReadData	24	static
+../Core/Src/thermocouple.c:402:7:MAX31855_GetThermocoupleTemperature	24	static
+../Core/Src/thermocouple.c:441:6:MAX31855_CheckFault	24	static
+../Core/Src/thermocouple.c:474:6:MAX31855_ReadTemp_IT	16	static
+../Core/Src/thermocouple.c:482:6:MAX3188_StartRead	8	static
+../Core/Src/thermocouple.c:490:6:HAL_SPI_RxCpltCallback	32	static
+../Core/Src/thermocouple.c:527:6:GetTemp	24	static

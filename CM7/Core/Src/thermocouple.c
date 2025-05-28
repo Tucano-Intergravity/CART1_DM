@@ -5,6 +5,8 @@
  *      Author: USER
  */
 #include <stdio.h>
+#include <stdbool.h>
+#include <string.h>
 #include "stm32h7xx_hal.h"
 #include "thermocouple.h"
 
@@ -455,11 +457,94 @@ void MAX31855_CheckFault(uint8_t ch)
 }
 
 
+//void GetTemp(double* Temp)
+//{
+//	for (uint8_t i=0; i < MAX_TC_CH; i++)
+//	{
+//		Temp[i] = (double)MAX31855_GetThermocoupleTemperature(i);
+//	}
+//}
+
+uint8_t fTemp = false;
+uint8_t idx_tc = 0;
+uint8_t dummy_tx[4] = {0xFF, 0xFF, 0xFF, 0xFF};
+uint8_t spi_rx_buffer[4];
+double tc[MAX_TC_CH] = {0};
+
+void MAX31855_ReadTemp_IT(uint8_t ch)
+{
+	MAX31855_CS_Enable(idx_tc);
+    //HAL_SPI_TransmitReceive_IT(&hspi1, dummy_tx, spi_rx_buffer, 4);
+    HAL_SPI_Receive_IT(&hspi1, spi_rx_buffer, 4);
+
+}
+
+void MAX3188_StartRead()
+{
+	idx_tc = 0;
+	fTemp = false;
+
+	MAX31855_ReadTemp_IT(idx_tc);
+}
+
+void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
+{
+    if (hspi->Instance == SPI1)
+    {
+    	MAX31855_CS_Disable(idx_tc);
+
+    	uint8_t data[4];
+    	memcpy((void*)data,(void*)spi_rx_buffer,sizeof(uint8_t)*4);
+
+        int32_t value = ((int32_t)data[0] << 24) | ((int32_t)data[1] << 16) |
+                        ((int32_t)data[2] << 8)  | ((int32_t)data[3]);
+
+        int16_t temp_data = (value >> 18) & 0x3FFF; // 14비트 Thermocouple data는 bit[31:18]에 위치
+
+        if (temp_data & 0x2000)
+        {
+            temp_data |= 0xC000; // Sign 확장
+        }
+
+        tc[idx_tc] = (double)temp_data * 0.25f;
+
+        idx_tc++;
+
+		if (idx_tc == MAX_TC_CH)
+		{
+			idx_tc = 0;
+			fTemp = true;
+		}
+		else
+		{
+			MAX31855_ReadTemp_IT(idx_tc);
+		}
+    }
+}
+
+
+
 void GetTemp(double* Temp)
 {
-	for (uint8_t i=0; i < MAX_TC_CH; i++)
+	for (uint8_t i = 0; i < MAX_TC_CH; i++)
 	{
-		Temp[i] = (double)MAX31855_GetThermocoupleTemperature(i);
+		Temp[i] = tc[i];
 	}
 }
+
+
+//double Convert_Temp(uint8_t *data) {
+//    int32_t value = ((int32_t)data[0] << 24) | ((int32_t)data[1] << 16) |
+//                    ((int32_t)data[2] << 8)  | ((int32_t)data[3]);
+//
+//    // 14비트 Thermocouple data는 bit[31:18]에 위치
+//    int16_t temp_data = (value >> 18) & 0x3FFF;
+//
+//    if (temp_data & 0x2000) {
+//        temp_data |= 0xC000; // Sign 확장
+//    }
+//
+//    return (double)temp_data * 0.25f;
+//}
+
 

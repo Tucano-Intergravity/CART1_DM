@@ -97,5 +97,11 @@ void GetTemp(double*);
 void MAX31855_CheckFault(uint8_t);
 
 
+extern uint8_t fTemp;
+
+void MAX3188_StartRead();
+void GetTemp(double*);
+
+
 
 #endif /* INC_THERMOCOUPLE_H_ */

@@ -265,6 +265,12 @@ Error_Handler();
 
 	  } // if (fTC == true)
 
+	  if (fTemp == true)
+	  {
+		  fTemp = false;
+		  GetTemp(TC);
+	  }
+
 	  if (f10ms == true)
 	  {
 		  f10ms = false;
@@ -273,6 +279,7 @@ Error_Handler();
 		  uint8_t temp_buf[32]={0};
 
 		  SVUpdate(sv);
+		  MAX3188_StartRead();
 
 		  sprintf((char*)tx_buf,"IGRVT_SV,%lu",systemtick);
 		  for (uint8_t i = 0; i < MAX_SV_NUM; i++)
@@ -280,12 +287,10 @@ Error_Handler();
 			  sprintf((char*)temp_buf,",%u",sv[i]);
 			  strcat((char*)tx_buf,(char*)temp_buf);
 		  }
-		  sprintf((char*)temp_buf,"\n\r");
+		  sprintf((char*)temp_buf,"\r\n");
 		  strcat((char*)tx_buf,(char*)temp_buf);
 
 		  SendTM(tx_buf);
-
-		  //GetTemp(TC);
 
 		  sprintf((char*)tx_buf,"IGRVT_TC,%lu",systemtick);
 		  for (uint8_t i = 0; i < MAX_TC_CH; i++)
@@ -293,7 +298,7 @@ Error_Handler();
 			  sprintf((char*)temp_buf,",%d",(int)(TC[i]*10.0));
 			  strcat((char*)tx_buf,(char*)temp_buf);
 		  }
-		  sprintf((char*)temp_buf,"\n\r");
+		  sprintf((char*)temp_buf,"\r\n");
 		  strcat((char*)tx_buf,(char*)temp_buf);
 
 		  SendTM(tx_buf);
@@ -306,7 +311,7 @@ Error_Handler();
 			  sprintf((char*)temp_buf,",%u",ADC_results[i]);
 			  strcat((char*)tx_buf,(char*)temp_buf);
 		  }
-		  sprintf((char*)temp_buf,"\n\r");
+		  sprintf((char*)temp_buf,"\r\n");
 		  strcat((char*)tx_buf,(char*)temp_buf);
 
 		  SendTM(tx_buf);
@@ -589,7 +594,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_128;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
