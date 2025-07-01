@@ -10,8 +10,9 @@
 
 #include "stm32h7xx_hal.h"
 #include "stm32h7xx_nucleo.h"
+#include <stdbool.h>
 
-#define MAX_SV_NUM 10
+#define MAX_SV_NUM 6 //10
 
 #define SV_CH_1		1001
 #define SV_CH_2		1002
@@ -55,5 +56,6 @@
 #define SV_CH10_GPIO	GPIO_PIN_9
 
 void SVUpdate(uint8_t* ch);
+void IgnitorSwitching();
 
 #endif /* INC_SOLENOIDVALVE_H_ */

@@ -45,7 +45,7 @@
 #define U12_CS_PIN	GPIO_PIN_14
 
 
-#define MAX_TC_CH	12
+#define MAX_TC_CH	4 //12
 
 #define TC_CH1	0
 #define TC_CH2 	1

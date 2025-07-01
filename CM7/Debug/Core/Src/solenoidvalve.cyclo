@@ -1,1 +1,3 @@
-../Core/Src/solenoidvalve.c:11:6:SVUpdate	22
+../Core/Src/solenoidvalve.c:14:6:IgnitorOn	2
+../Core/Src/solenoidvalve.c:26:6:IgnitorSwitching	3
+../Core/Src/solenoidvalve.c:47:6:SVUpdate	22

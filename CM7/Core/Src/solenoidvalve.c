@@ -8,6 +8,42 @@
 #include "solenoidvalve.h"
 #include <stdint.h>
 
+uint8_t fIgnitor = false;
+uint8_t fIgnitorON = false;
+
+void IgnitorOn(bool flag)
+{
+	if (flag == true)
+	{
+		HAL_GPIO_WritePin(SV_CH6_PORT, SV_CH6_GPIO, GPIO_PIN_SET);
+	}
+	else
+	{
+		HAL_GPIO_WritePin(SV_CH6_PORT, SV_CH6_GPIO, GPIO_PIN_RESET);
+	}
+}
+
+void IgnitorSwitching()
+{
+	if (fIgnitor == true)
+	{
+		if (fIgnitorON == true)
+		{
+			fIgnitorON = false;
+		}
+		else
+		{
+			fIgnitorON = true;
+		}
+		IgnitorOn(fIgnitorON);
+	}
+	else
+	{
+		IgnitorOn(false);
+	}
+}
+
+
 void SVUpdate(uint8_t* ch)
 {
 	for (uint8_t i = 0; i<MAX_SV_NUM; i++) {
@@ -45,7 +81,7 @@ void SVUpdate(uint8_t* ch)
 			}
 			break;
 		case 4:
-			if (ch[4] == 0) {
+			if (ch[4] == 0) { // ignitor Power
 				HAL_GPIO_WritePin(SV_CH5_PORT, SV_CH5_GPIO, GPIO_PIN_RESET);
 			}
 			else {
@@ -53,11 +89,13 @@ void SVUpdate(uint8_t* ch)
 			}
 			break;
 		case 5:
-			if (ch[5] == 0) {
-				HAL_GPIO_WritePin(SV_CH6_PORT, SV_CH6_GPIO, GPIO_PIN_RESET);
+			if (ch[5] == 0) { // Ignitor signal
+				//HAL_GPIO_WritePin(SV_CH6_PORT, SV_CH6_GPIO, GPIO_PIN_RESET);
+				fIgnitor = false;
 			}
 			else {
-				HAL_GPIO_WritePin(SV_CH6_PORT, SV_CH6_GPIO, GPIO_PIN_SET);
+				//HAL_GPIO_WritePin(SV_CH6_PORT, SV_CH6_GPIO, GPIO_PIN_SET);
+				fIgnitor = true;
 			}
 			break;
 		case 6:

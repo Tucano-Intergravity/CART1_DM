@@ -118,6 +118,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		{
 			f1000ms = true;
 		}
+
+		IgnitorSwitching();
 	}
 }
 
@@ -280,37 +282,42 @@ Error_Handler();
 
 		  SVUpdate(sv);
 		  MAX3188_StartRead();
+		  GetADCRaw(ADC_results);
 
-		  sprintf((char*)tx_buf,"IGRVT_SV,%lu",systemtick);
+		  sprintf((char*)tx_buf,"IGRVT,%lu",systemtick);
 		  for (uint8_t i = 0; i < MAX_SV_NUM; i++)
 		  {
 			  sprintf((char*)temp_buf,",%u",sv[i]);
 			  strcat((char*)tx_buf,(char*)temp_buf);
 		  }
-		  sprintf((char*)temp_buf,"\r\n");
-		  strcat((char*)tx_buf,(char*)temp_buf);
+//		  sprintf((char*)temp_buf,"\r\n");
+//		  strcat((char*)tx_buf,(char*)temp_buf);
 
-		  SendTM(tx_buf);
-
-		  sprintf((char*)tx_buf,"IGRVT_TC,%lu",systemtick);
+		  //sprintf((char*)temp_buf,";");
+		  //strcat((char*)tx_buf,(char*)temp_buf);
+		  //sprintf((char*)temp_buf,"%d",(int)(TC[0]*10.0));
+		  //strcat((char*)tx_buf,(char*)temp_buf);
 		  for (uint8_t i = 0; i < MAX_TC_CH; i++)
 		  {
 			  sprintf((char*)temp_buf,",%d",(int)(TC[i]*10.0));
 			  strcat((char*)tx_buf,(char*)temp_buf);
 		  }
-		  sprintf((char*)temp_buf,"\r\n");
-		  strcat((char*)tx_buf,(char*)temp_buf);
-
-		  SendTM(tx_buf);
-
-		  GetADCRaw(ADC_results);
-
-		  sprintf((char*)tx_buf,"IGRVT_PT,%lu",systemtick);
-		  for (uint8_t i = 0; i < MAX_TC_CH; i++)
+//		  sprintf((char*)temp_buf,"\r\n");
+//		  strcat((char*)tx_buf,(char*)temp_buf);
+//
+//		  SendTM(tx_buf);
+//
+//		  sprintf((char*)temp_buf,";");
+//		  strcat((char*)tx_buf,(char*)temp_buf);
+//		  sprintf((char*)temp_buf,"%u",ADC_results[0]);
+//		  strcat((char*)tx_buf,(char*)temp_buf);
+		  for (uint8_t i = 0; i < N_ADC_CH; i++)
 		  {
 			  sprintf((char*)temp_buf,",%u",ADC_results[i]);
 			  strcat((char*)tx_buf,(char*)temp_buf);
 		  }
+		  sprintf((char*)temp_buf,",EOD");
+		  strcat((char*)tx_buf,(char*)temp_buf);
 		  sprintf((char*)temp_buf,"\r\n");
 		  strcat((char*)tx_buf,(char*)temp_buf);
 
