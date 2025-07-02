@@ -15,11 +15,11 @@ void IgnitorOn(bool flag)
 {
 	if (flag == true)
 	{
-		HAL_GPIO_WritePin(SV_CH6_PORT, SV_CH6_GPIO, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_SET);
 	}
 	else
 	{
-		HAL_GPIO_WritePin(SV_CH6_PORT, SV_CH6_GPIO, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_RESET);
 	}
 }
 
